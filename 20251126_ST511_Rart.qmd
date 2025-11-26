@@ -1,13 +1,381 @@
 ---
-title: "20251126_ST511_Rart"
-format: html
+title: "Statistics Experience"
+format: pdf
 editor: visual
+author: "Cory McKinstry"
 ---
 
-## Quarto
+## Library Packages
 
-X
+```{r}
+#| message: false
+library(ggforce) # Gives ggplot extra geoms
+library(tidyverse)
+library(ggplot2)
+```
 
-## Running Code
+## Manufacture Data
 
-W
+Need to manufacture data to use in our ggplot object, then we will use ggplot and the geom_circle call from the ggforce package to visualize the data and ensure true circularity
+
+```{r}
+circle <- data.frame(
+  x0 = 1,
+  y0 = 1,
+  r = 1
+)
+
+ggplot() +
+  geom_circle(
+    aes(x0 = x0, y0 = y0, r = r),
+    data = circle,
+    fill = "black") +
+  coord_fixed()
+```
+
+## Place many circles in a line
+
+We do the same, but for many circles. We want them to be separate, so we modify the y. 
+
+```{r}
+circles <- data.frame(
+  x0 = rep(1, 9),
+  y0 = seq(1, 20, length.out = 9),
+  r = 0.5
+)
+
+ggplot() +
+  geom_circle(
+    aes(x0 = x0, y0 = y0, r = r),
+    data = circles,
+    fill = "black") +
+  coord_fixed() +
+  theme_void()
+```
+
+## Get a line of circles
+
+Here we just play around with the data and continually visualize to get things the way we want. Changes in this code are tracked in order (e.g. r1, r2,...)
+
+```{r}
+circles2 <- tibble(
+  x1 = rep(1, 9),
+  x2 = seq(-5, 5, length.out = 9),
+  x3 = seq(-1, 1, length.out = 9),
+  x4 = seq(-0.2, 0.2, length.out = 9),
+  y1 = seq(1, 20, length.out = 9),
+  y2 = seq(0, 1, length.out = 9),
+  y3 = seq(-1, 1, length.out = 9),
+  r1 = 1,
+  r2 = (y2^2),
+  r3 = (y3^-2),
+  r4 = (-(y3^2)),
+  r5 = (-(y3^2) + 2),
+  r6 = (-(y3^2) + 2) / 20,
+  x5 = sin(y3) / 5
+)
+
+ggplot() +
+  geom_circle(
+    aes(x0 = x5, y0 = y3, r = r6),
+    data = circles2,
+    fill = "black",
+    alpha = 1) +
+  coord_fixed()
+```
+
+## Get multiple lines of circles
+
+We continue to play around, now adding a second geom_circle to the ggplot call to get a second line of circles. 
+
+```{r}
+circles3 <- tibble(
+  y3 = seq(-1, 1, length.out = 9),
+  r6 = (-(y3^2) + 2) / 20,
+  x5 = sin(y3) / 5,
+  xx1 = x5 - 0.25,
+  xxx1 = x5 + 0.25,
+  rr1 = 0.05,
+  rrr1 = 0.05
+)
+
+ggplot() +
+  geom_circle(
+    aes(x0 = x5, y0 = y3, r = r6),
+    data = circles3,
+    fill = "black",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = xx1, y0 = y3, r = rr1),
+    data = circles3,
+    fill = "black",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = xxx1, y0 = y3, r = rrr1),
+    data = circles3,
+    fill = "black",
+    alpha = 1) +
+  coord_fixed()
+```
+
+## Taper ends
+
+We want to now taper the ends to a point, so it starts to get pumpkin shaped. We add circle line colors to differentiate between rows as we move things. We also clean the variable names. We mutate the data for x_center_m1 (& p1)
+
+```{r}
+circles4 <- tibble(
+  y3 = seq(-1, 1, length.out = 9),
+  r6 = (-(y3^2) + 2) / 20,
+  x_center = sin(y3) / 5,
+  x_center_m1 = x_center - 0.25,
+  x_center_p1 = x_center + 0.25,
+  rr1 = 0.05,
+  rrr1 = 0.05,
+) %>%
+  mutate(x_center_m1 = 
+           if_else(y3 == max(y3) | y3 == min(y3),
+                   x_center_m1 + 0.1,
+                   x_center_m1),
+         x_center_p1 = 
+           if_else(y3 == max(y3) | y3 == min(y3),
+                   x_center_p1 - 0.1,
+                   x_center_p1))
+
+ggplot() +
+  geom_circle(
+    aes(x0 = x_center, y0 = y3, r = r6),
+    data = circles4,
+    fill = "black",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = x_center_m1, y0 = y3, r = rr1),
+    data = circles4,
+    fill = "red",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = x_center_p1, y0 = y3, r = rrr1),
+    data = circles4,
+    fill = "blue",
+    alpha = 1) +
+  coord_fixed()
+```
+
+## Further play with radius values, add a new line
+
+Add more rows of dots to make the dots overall more pumpkin shaped, try and taper the radius slightly less at the bottom
+
+```{r}
+circles5 <- tibble(
+  y3 = seq(-1, 1, length.out = 9),
+  r6 = (-(y3^2) + 2) / 20,
+  x_center = sin(y3) / 5,
+  x_center_m1 = x_center - 0.25,
+  x_center_p1 = x_center + 0.25,
+  rr1 = 0.05,
+  rrr1 = 0.05,
+) %>%
+  mutate(x_center_m1 = 
+           if_else(y3 == max(y3) | y3 == min(y3),
+                   x_center_m1 + 0.1,
+                   x_center_m1),
+         x_center_p1 = 
+           if_else(y3 == max(y3) | y3 == min(y3),
+                   x_center_p1 - 0.1,
+                   x_center_p1),
+         x_center_m2 = 
+           if_else(y3 == min(y3), x_center_m1 - 0.25 + 0.05, x_center_m1 - 0.25),
+         r_center_m2 = (y3 + 2) / 30,
+         y_center_m2 = if_else(y3 == min(y3), y3 + 0.125, y3))
+
+ggplot() +
+  geom_circle(
+    aes(x0 = x_center, y0 = y3, r = r6),
+    data = circles5,
+    fill = "black",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = x_center_m1, y0 = y3, r = rr1),
+    data = circles5,
+    fill = "red",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = x_center_p1, y0 = y3, r = rrr1),
+    data = circles5,
+    fill = "blue",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = x_center_m2, y0 = y_center_m2, r = r_center_m2),
+    data = circles5,
+    fill = "green",
+    alpha = 1) +
+  coord_fixed()
+```
+
+## Add in that same line on the other side
+
+Mirror the previous line (green) to the other side. 
+
+```{r}
+circles6 <- tibble(
+  y3 = seq(-1, 1, length.out = 9),
+  r6 = (-(y3^2) + 2) / 20,
+  x_center = sin(y3) / 5,
+  x_center_m1 = x_center - 0.25,
+  x_center_p1 = x_center + 0.25,
+  rr1 = 0.05,
+  rrr1 = 0.05,
+) %>%
+  mutate(x_center_m1 = 
+           if_else(y3 == max(y3) | y3 == min(y3),
+                   x_center_m1 + 0.1,
+                   x_center_m1),
+         x_center_p1 = 
+           if_else(y3 == max(y3) | y3 == min(y3),
+                   x_center_p1 - 0.1,
+                   x_center_p1),
+         x_center_m2 = 
+           if_else(y3 == min(y3), x_center_m1 - 0.25 + 0.05, x_center_m1 - 0.25),
+         r_center_mp2 = (y3 + 2) / 30,
+         y_center_mp2 = if_else(y3 == min(y3), y3 + 0.125, y3),
+         x_center_p2 = if_else(y3 == min(y3), x_center_p1 + 0.25 - 0.05, x_center_p1 + 0.25))
+
+ggplot() +
+  geom_circle(
+    aes(x0 = x_center, y0 = y3, r = r6),
+    data = circles6,
+    fill = "black",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = x_center_m1, y0 = y3, r = rr1),
+    data = circles6,
+    fill = "black",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = x_center_p1, y0 = y3, r = rrr1),
+    data = circles6,
+    fill = "black",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = x_center_m2, y0 = y_center_mp2, r = r_center_mp2),
+    data = circles6,
+    fill = "black",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = x_center_p2, y0 = y_center_mp2, r = r_center_mp2),
+    data = circles6,
+    fill = "black",
+    alpha = 1) +
+  coord_fixed() +
+  theme_void()
+```
+
+## Change the background color to yellow
+
+Now that we have a solid base of dots, make the background the color of the pumpkins in the reference photo. 
+
+```{r}
+circles6 <- tibble(
+  y3 = seq(-1, 1, length.out = 9),
+  r6 = (-(y3^2) + 2) / 20,
+  x_center = sin(y3) / 5,
+  x_center_m1 = x_center - 0.25,
+  x_center_p1 = x_center + 0.25,
+  rr1 = 0.05,
+  rrr1 = 0.05,
+) %>%
+  mutate(x_center_m1 = 
+           if_else(y3 == max(y3) | y3 == min(y3),
+                   x_center_m1 + 0.1,
+                   x_center_m1),
+         x_center_p1 = 
+           if_else(y3 == max(y3) | y3 == min(y3),
+                   x_center_p1 - 0.1,
+                   x_center_p1),
+         x_center_m2 = 
+           if_else(y3 == min(y3), x_center_m1 - 0.25 + 0.05, x_center_m1 - 0.25),
+         r_center_mp2 = (y3 + 2) / 30,
+         y_center_mp2 = if_else(y3 == min(y3), y3 + 0.125, y3),
+         x_center_p2 = if_else(y3 == min(y3), x_center_p1 + 0.25 - 0.05, x_center_p1 + 0.25))
+
+ggplot() +
+  geom_circle(
+    aes(x0 = 0.1, y0 = 0.05, r = 1.2),
+    data = circles6,
+    fill = "#FFC700",
+    color = "#FFC700") +
+  geom_circle(
+    aes(x0 = x_center, y0 = y3, r = r6),
+    data = circles6,
+    fill = "black") +
+  geom_circle(
+    aes(x0 = x_center_m1, y0 = y3, r = rr1),
+    data = circles6,
+    fill = "black") +
+  geom_circle(
+    aes(x0 = x_center_p1, y0 = y3, r = rrr1),
+    data = circles6,
+    fill = "black") +
+  geom_circle(
+    aes(x0 = x_center_m2, y0 = y_center_mp2, r = r_center_mp2),
+    data = circles6,
+    fill = "black",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = x_center_p2, y0 = y_center_mp2, r = r_center_mp2),
+    data = circles6,
+    fill = "black",
+    alpha = 1) +
+  coord_fixed() +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "#FFDE00", color = "#FFDE00"))
+```
+
+
+## Going beyond the video
+
+The video ended as the hosts hit the 1 hour mark. To continue editing this graph beyond the point they finished at, I will add in a stem for the pumpkin, and change the exterior circle to an ellipse to better match our dots. 
+
+```{r}
+circles6
+
+trap1 <- tibble(
+  x <- c(1, 3, 1.5, 2.5),
+  y <- c(0, 0, 2, 2)
+)
+
+ggplot() +
+  geom_polygon(
+    aes(x = c(-0.15, -0.05, 0.25, 0.35), y = c(1, 2, 2, 1)),
+    data = trap1,
+    fill = "brown") +
+  geom_ellipse(
+    aes(x0 = 0, y0 = 0.1, a = 0.8, b = 1.4, angle = pi / 1.05),
+    data = circles6,
+    fill = "#FFC700",
+    color = "#FFC700") +
+  geom_circle(
+    aes(x0 = x_center, y0 = y3, r = r6),
+    data = circles6,
+    fill = "black") +
+  geom_circle(
+    aes(x0 = x_center_m1, y0 = y3, r = rr1),
+    data = circles6,
+    fill = "black") +
+  geom_circle(
+    aes(x0 = x_center_p1, y0 = y3, r = rrr1),
+    data = circles6,
+    fill = "black") +
+  geom_circle(
+    aes(x0 = x_center_m2, y0 = y_center_mp2, r = r_center_mp2),
+    data = circles6,
+    fill = "black",
+    alpha = 1) +
+  geom_circle(
+    aes(x0 = x_center_p2, y0 = y_center_mp2, r = r_center_mp2),
+    data = circles6,
+    fill = "black",
+    alpha = 1) +
+  coord_fixed() +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "#FFDE00", color = "#FFDE00"))
+```
